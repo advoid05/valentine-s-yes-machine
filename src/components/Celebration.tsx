@@ -32,14 +32,29 @@ const Celebration = () => {
       if (audioRef.current) {
         try {
           audioRef.current.volume = 0.5; // Set volume to 50%
+          audioRef.current.muted = false; // Unmute before playing
           await audioRef.current.play();
         } catch (error) {
-          console.log("Audio playback failed:", error);
+          console.log("Audio playback failed - may need user interaction:", error);
         }
       }
     };
 
+    // Try to play immediately
     playAudio();
+
+    // Add click handler as fallback for browsers that require user interaction
+    const handleUserInteraction = () => {
+      if (audioRef.current && audioRef.current.paused) {
+        audioRef.current.play().catch(() => {});
+      }
+    };
+
+    document.addEventListener("click", handleUserInteraction, { once: true });
+
+    return () => {
+      document.removeEventListener("click", handleUserInteraction);
+    };
   }, []);
 
   return (
@@ -47,9 +62,8 @@ const Celebration = () => {
       {/* Background music */}
       <audio
         ref={audioRef}
-        src="/Tangled - I See The Light.mp3"
+        src="/tangled-i-see-the-light_CYcydMJk.mp3"
         loop
-        autoPlay
       />
       {/* Confetti particles */}
       {particles.map((p) => (
