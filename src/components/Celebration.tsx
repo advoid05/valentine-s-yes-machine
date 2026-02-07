@@ -92,7 +92,7 @@ const Celebration = () => {
           transition={{ delay: 1 }}
         >
           <p className="text-lg text-card-foreground" style={{ fontFamily: "var(--font-body)" }}>
-            Happy Valentine's Day, my love! ❤️
+            I love you, my love ❤️
           </p>
         </motion.div>
       </motion.div>
