@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useCallback } from "react";
+import { motion } from "framer-motion";
 import FloatingHearts from "./FloatingHearts";
 import Celebration from "./Celebration";
 
@@ -8,13 +8,6 @@ const MESSAGES = [
   "Are you sure? 🥺",
   "Really really sure? 😢",
   "Think again! 💔",
-  "Pls? 🥹",
-  "Don't do this to me 😭",
-  "I'll cry... 😿",
-  "You're breaking my heart 💔",
-  "FINE... just kidding, try again 😏",
-  "Last chance... maybe? 🫣",
-  "OK I'm not giving up 🫶",
 ];
 
 const BEAR_STAGES = [
@@ -25,29 +18,23 @@ const BEAR_STAGES = [
   "💀",
 ];
 
+const CONVERT_AT = 4; // After this many "No" clicks, No becomes Yes
+
 const ValentineProposal = () => {
   const [noCount, setNoCount] = useState(0);
   const [accepted, setAccepted] = useState(false);
-  const noButtonRef = useRef<HTMLButtonElement>(null);
 
-  const yesScale = 1 + noCount * 0.25;
+  const yesScale = 1 + noCount * 0.3;
   const bearIndex = Math.min(Math.floor(noCount / 2), BEAR_STAGES.length - 1);
+  const noConverted = noCount >= CONVERT_AT;
 
   const handleNo = useCallback(() => {
     setNoCount((prev) => prev + 1);
   }, []);
 
-  const getNoPosition = useCallback(() => {
-    if (noCount < 2) return {};
-    // After 2 clicks, the button runs away
-    return {
-      position: "fixed" as const,
-      left: `${Math.random() * 70 + 10}%`,
-      top: `${Math.random() * 70 + 10}%`,
-    };
-  }, [noCount]);
-
-  const noText = MESSAGES[Math.min(noCount, MESSAGES.length - 1)];
+  const noText = noConverted
+    ? "Yes! 💖"
+    : MESSAGES[Math.min(noCount, MESSAGES.length - 1)];
 
   if (accepted) {
     return <Celebration />;
@@ -63,7 +50,6 @@ const ValentineProposal = () => {
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: "spring", duration: 0.8 }}
       >
-        {/* Bear emoji that changes with rejection */}
         <motion.div
           className="text-8xl"
           animate={{ rotate: noCount > 0 ? [0, -10, 10, -10, 0] : 0 }}
@@ -77,16 +63,24 @@ const ValentineProposal = () => {
           Will you be my Valentine?
         </h1>
 
-        {noCount > 0 && (
+        {noCount > 0 && !noConverted && (
           <motion.p
             className="text-lg text-muted-foreground font-semibold"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             key={noCount}
           >
-            {noCount > 5
-              ? `You've said no ${noCount} times... the button won't stop 😈`
-              : "The no button is getting suspicious..."}
+            The no button is getting suspicious...
+          </motion.p>
+        )}
+
+        {noConverted && (
+          <motion.p
+            className="text-lg text-muted-foreground font-semibold"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+          >
+            See? Both buttons say Yes now 😏
           </motion.p>
         )}
 
@@ -95,53 +89,30 @@ const ValentineProposal = () => {
           <motion.button
             className="rounded-full bg-primary px-8 py-4 font-bold text-primary-foreground shadow-lg hover:shadow-xl transition-shadow"
             style={{ fontFamily: "var(--font-body)" }}
-            animate={{ scale: yesScale }}
-            whileHover={{ scale: yesScale * 1.1 }}
-            whileTap={{ scale: yesScale * 0.95 }}
+            animate={{ scale: noConverted ? 1 : yesScale }}
+            whileHover={{ scale: (noConverted ? 1 : yesScale) * 1.1 }}
+            whileTap={{ scale: (noConverted ? 1 : yesScale) * 0.95 }}
             onClick={() => setAccepted(true)}
           >
             Yes! 💖
           </motion.button>
 
-          {/* NO Button - runs away after 2 clicks */}
-          <AnimatePresence mode="wait">
-            <motion.button
-              ref={noButtonRef}
-              key={noCount}
-              className="rounded-full border-2 border-border bg-card px-6 py-3 font-semibold text-card-foreground shadow hover:bg-muted transition-colors"
-              style={{
-                fontFamily: "var(--font-body)",
-                fontSize: `${Math.max(0.7, 1 - noCount * 0.05)}rem`,
-                ...getNoPosition(),
-              }}
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: Math.max(0.4, 1 - noCount * 0.08) }}
-              exit={{ opacity: 0, scale: 0, rotate: 180 }}
-              whileHover={
-                noCount >= 3
-                  ? {
-                      x: (Math.random() - 0.5) * 300,
-                      y: (Math.random() - 0.5) * 300,
-                      transition: { duration: 0.2 },
-                    }
-                  : {}
-              }
-              onClick={handleNo}
-            >
-              {noText}
-            </motion.button>
-          </AnimatePresence>
-        </div>
-
-        {noCount >= 8 && (
-          <motion.p
-            className="text-sm text-accent italic mt-2"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
+          {/* NO Button - stays in place, converts to Yes after CONVERT_AT clicks */}
+          <motion.button
+            className={`rounded-full px-6 py-3 font-semibold shadow transition-colors ${
+              noConverted
+                ? "bg-primary text-primary-foreground hover:shadow-xl"
+                : "border-2 border-border bg-card text-card-foreground hover:bg-muted"
+            }`}
+            style={{ fontFamily: "var(--font-body)" }}
+            animate={noConverted ? { scale: 1 } : {}}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={noConverted ? () => setAccepted(true) : handleNo}
           >
-            Hint: There's only one correct answer here 😏
-          </motion.p>
-        )}
+            {noText}
+          </motion.button>
+        </div>
       </motion.div>
     </div>
   );
