@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 
 const EMOJIS = ["🎉", "💖", "💕", "🥰", "💗", "✨", "🎊", "💘", "🩷", "🫶"];
@@ -13,6 +13,7 @@ interface Particle {
 
 const Celebration = () => {
   const [particles, setParticles] = useState<Particle[]>([]);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     const p = Array.from({ length: 40 }, (_, i) => ({
@@ -25,8 +26,31 @@ const Celebration = () => {
     setParticles(p);
   }, []);
 
+  // Play music when component mounts
+  useEffect(() => {
+    const playAudio = async () => {
+      if (audioRef.current) {
+        try {
+          audioRef.current.volume = 0.5; // Set volume to 50%
+          await audioRef.current.play();
+        } catch (error) {
+          console.log("Audio playback failed:", error);
+        }
+      }
+    };
+
+    playAudio();
+  }, []);
+
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4">
+      {/* Background music */}
+      <audio
+        ref={audioRef}
+        src="/Tangled - I See The Light.mp3"
+        loop
+        autoPlay
+      />
       {/* Confetti particles */}
       {particles.map((p) => (
         <motion.span
@@ -92,7 +116,7 @@ const Celebration = () => {
           transition={{ delay: 1 }}
         >
           <p className="text-lg text-card-foreground" style={{ fontFamily: "var(--font-body)" }}>
-            I love you, my love ❤️
+            I love you Soumya ❤️
           </p>
         </motion.div>
       </motion.div>

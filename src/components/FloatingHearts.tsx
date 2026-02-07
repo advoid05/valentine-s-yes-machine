@@ -19,7 +19,7 @@ const FloatingHearts = () => {
       emoji: HEARTS[Math.floor(Math.random() * HEARTS.length)],
       left: Math.random() * 100,
       duration: 6 + Math.random() * 8,
-      delay: Math.random() * 10,
+      delay: (i * 0.3) - Math.random() * 0.5, // Stagger hearts with minimal delay
     }));
     setHearts(initial);
   }, []);
